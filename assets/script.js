@@ -1,30 +1,16 @@
 var citySearchHistory = [];
 var weatherApiUrl =
-  "https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}";
+  "https://api.openweathermap.org/data/2.5/weather?id=524901&appid=3ca3ddd51d254660450284e7e2b87763";
+// "https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}";
 var weatherApiKey = "3ca3ddd51d254660450284e7e2b87763";
 
 //DOM elements
 var searchForm = document.getElementById("search-form");
 var searchInput = document.getElementById("search-input");
 var searchSubmit = document.getElementById("search-submit");
-var searchHistory = document.getElementById("history-container");
+// var searchHistory = document.getElementById("history-container");
 var todayInfo = document.getElementById("today-content");
 var forecastInfo = document.getElementById("forecast-container");
-
-//City search submission
-function searchForm(event) {
-  event.preventDefault();
-  var search = searchInput.value.trim();
-
-  if (!searchInput.value) {
-    alert("Please enter a city");
-    return;
-  }
-
-  showWeather(search);
-  displayForecast(search);
-  searchInput.value = "";
-}
 
 //Display CURRENT weather from OpenWeather API
 function displayCurrentWeatherAPI(city, weather) {
@@ -75,8 +61,6 @@ function displayForecastCard(forecast) {
   var forecastCard = document.createElement("div");
   forecastCard.classList.add("card");
 
-  // var cardBody = document.createElement("div");
-
   var heading = document.createElement("h3");
   heading.classList.add("heading");
   heading.textContent = dayjs(forecast.dt_txt).format("M/D/YYYY");
@@ -97,16 +81,70 @@ function displayForecastCard(forecast) {
   forecastCard.append("heading", "tempEl", "windEl", "humidityEl");
 }
 
-function showWeather() {}
-
 //Display Forecast on page
 function displayForecast(dayForecast) {
   for (var i = 0; i < dayForecast.length; i++) {
-    renderForecastCard(dayForecast[i]);
+    displayForecastCard(dayForecast[i]);
   }
 }
 
-function handleSearchHistory() {}
+//Calling weather and forecast functions to show on page
+function showItems(city, data) {
+  displayCurrentWeatherAPI(city);
+  displayForecast(data);
+}
+
+//Fetches weather for search location
+function fetchWeather(location) {
+  var { lat } = location;
+  var { lon } = location;
+  var city = location.name;
+
+  var apiUrl = `${weatherApiRootUrl}/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${weatherApiKey}`;
+
+  fetch(apiUrl)
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (data) {
+      renderItems(city, data);
+    })
+    .catch(function (err) {
+      console.error(err);
+    });
+}
+
+function fetchCoordinates(search) {
+  var apiUrl = `${weatherApiRootUrl}/geo/1.0/direct?q=${search}&limit=5&appid=${weatherApiKey}`;
+
+  fetch(apiUrl)
+    .then(function (res) {
+      return res.json();
+    })
+    .then(function (data) {
+      if (!data[0]) {
+        alert("Location not found");
+      } else {
+        fetchWeather(data[0]);
+      }
+    })
+    .catch(function (err) {
+      console.error(err);
+    });
+}
+
+//City search submission
+function searchForm(event) {
+  event.preventDefault();
+  var search = searchInput.value.trim();
+
+  if (!searchInput.value) {
+    alert("Please enter a city");
+    return;
+  }
+
+  fetchCoordinates(search);
+  searchInput.value = "";
+}
 
 searchForm.addEventListener("submit", searchForm);
-searchHistory.addEventListener("click", handleSearchHistory);
