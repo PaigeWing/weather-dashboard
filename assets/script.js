@@ -1,11 +1,11 @@
 var citySearchHistory = [];
-var weatherApiUrl =
-  "https://api.openweathermap.org/data/2.5/weather?id=524901&appid=3ca3ddd51d254660450284e7e2b87763";
+var weatherApiRootUrl = "https://api.openweathermap.org";
+// "https://api.openweathermap.org/data/2.5/weather?id=524901&appid=3ca3ddd51d254660450284e7e2b87763";
 // "https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API key}";
 var weatherApiKey = "3ca3ddd51d254660450284e7e2b87763";
 
 //DOM elements
-var searchForm = document.getElementById("search-form");
+// var searchForm = document.getElementById("search-form");
 var searchInput = document.getElementById("search-input");
 var searchSubmit = document.getElementById("search-submit");
 // var searchHistory = document.getElementById("history-container");
@@ -17,9 +17,10 @@ function displayCurrentWeatherAPI(city, weather) {
   var date = dayjs().format("M/D/YYYY");
 
   //Variables to use later in displaying
-  var temp = weather.main.temp;
-  var humidity = weather.main.humidity;
-  var wind = weather.main.speed;
+  // console.log(weather);
+  var temp = weather.list[0].main.temp;
+  var humidity = weather.list[0].main.humidity;
+  var wind = weather.list[0].wind.speed;
 
   //Variables for making current weather card
   var weatherCard = document.createElement("div");
@@ -32,15 +33,15 @@ function displayCurrentWeatherAPI(city, weather) {
 
   var tempEl = document.createElement("p");
   tempEl.setAttribute("class", "temp");
-  tempEl.textContent = `${temp}`;
+  tempEl.textContent = `Temperature: ${temp}`;
 
   var windEl = document.createElement("p");
   windEl.setAttribute("class", "wind");
-  windEl.textContent = `${wind}`;
+  windEl.textContent = `Wind: ${wind} MPH`;
 
   var humidityEl = document.createElement("p");
   humidityEl.setAttribute("class", "humidity");
-  humidityEl.textContent = `${humidity}`;
+  humidityEl.textContent = `Humidity: ${humidity}`;
 
   weatherCard.append(heading, tempEl, windEl, humidityEl);
   todayInfo.innerHTML = "";
@@ -50,9 +51,10 @@ function displayCurrentWeatherAPI(city, weather) {
 //Display forecast in card
 function displayForecastCard(forecast) {
   //Variables to use later in displaying
+  console.log(forecast);
   var temp = forecast.main.temp;
   var humidity = forecast.main.humidity;
-  var wind = forecast.main.speed;
+  var wind = forecast.wind.speed;
 
   //Variables for making forecast cards
   var section = document.createElement("div");
@@ -60,6 +62,8 @@ function displayForecastCard(forecast) {
 
   var forecastCard = document.createElement("div");
   forecastCard.classList.add("card");
+  forecastCard.style.margin = "5px";
+  forecastCard.style.padding = "10px";
 
   var heading = document.createElement("h3");
   heading.classList.add("heading");
@@ -67,35 +71,41 @@ function displayForecastCard(forecast) {
 
   var tempEl = document.createElement("p");
   tempEl.classList.add("temp");
-  tempEl.textContent = `${temp} °F`;
+  tempEl.textContent = `Temperature: ${temp} °F`;
 
   var windEl = document.createElement("p");
   windEl.classList.add("wind");
-  windEl.textContent = `${wind} MPH`;
+  windEl.textContent = `Wind: ${wind} MPH`;
 
   var humidityEl = document.createElement("p");
   humidityEl.classList.add("humidity");
-  humidityEl.textContent = `${humidity} %`;
+  humidityEl.textContent = `Humidity: ${humidity} %`;
 
-  section.append("forecastCard");
-  forecastCard.append("heading", "tempEl", "windEl", "humidityEl");
+  section.append(forecastCard);
+  forecastCard.append(heading);
+  forecastCard.append(tempEl);
+  forecastCard.append(windEl);
+  forecastCard.append(humidityEl);
+  forecastInfo.append(section);
 }
 
 //Display Forecast on page
 function displayForecast(dayForecast) {
   for (var i = 0; i < dayForecast.length; i++) {
-    displayForecastCard(dayForecast[i]);
+    if (i === 0 || i % 8 === 0) {
+      displayForecastCard(dayForecast[i]);
+    }
   }
 }
 
 //Calling weather and forecast functions to show on page
-function showItems(city, data) {
-  displayCurrentWeatherAPI(city);
-  displayForecast(data);
+function renderItems(city, data) {
+  displayCurrentWeatherAPI(city, data);
+  displayForecast(data.list);
 }
 
 //Fetches weather for search location
-function fetchWeather(location) {
+function fetchWeatherData(location) {
   var { lat } = location;
   var { lon } = location;
   var city = location.name;
@@ -114,6 +124,7 @@ function fetchWeather(location) {
     });
 }
 
+//Calls fetchWeatherData function to pull from the Geolocation and display
 function fetchCoordinates(search) {
   var apiUrl = `${weatherApiRootUrl}/geo/1.0/direct?q=${search}&limit=5&appid=${weatherApiKey}`;
 
@@ -125,7 +136,7 @@ function fetchCoordinates(search) {
       if (!data[0]) {
         alert("Location not found");
       } else {
-        fetchWeather(data[0]);
+        fetchWeatherData(data[0]);
       }
     })
     .catch(function (err) {
@@ -137,14 +148,12 @@ function fetchCoordinates(search) {
 function searchForm(event) {
   event.preventDefault();
   var search = searchInput.value.trim();
-
   if (!searchInput.value) {
     alert("Please enter a city");
     return;
   }
-
   fetchCoordinates(search);
   searchInput.value = "";
 }
 
-searchForm.addEventListener("submit", searchForm);
+searchSubmit.addEventListener("click", searchForm);
