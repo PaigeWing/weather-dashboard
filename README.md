@@ -6,7 +6,7 @@ A simple way to search the weather for a specific city. Allows an easy, clean wa
 
 After creating this dashboard, I have learned to basics and requirements need to make API calls using fetch and server-side APIs.
 
-<img src="assets/weather-dashboard-screenshot.jpg" width="800">
+<img src="weather-dashboard-screenshot.jpg" width="800">
 
 ## Installation
 
